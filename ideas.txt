@@ -1,0 +1,50 @@
+game settings
+    realtime-tick: actual time that is considered a tick
+    ticks-hunger: how many ticks to drop one lvl of hunger
+    ticks-energy: how many ticks to drop one lvl of energy
+    ticks-fitness
+    ticks-attention
+    ticks-happiness ?? or value should be compounded
+
+games hat you play with your pet affects stats
+    fetch:      ++attention +fitness -hunger -energy
+    juggle:     ++attention
+    simon-says: ++attention -energy
+    swim-with:  ++attention +fitness -hunger -energy
+
+
+actions on your pet:
+    feeding     ++hunger +attention -fitness -energy
+    sleeping    ++energy 
+    exercise    ++fitness +hungry +attention
+    attention   => games you play with affects the stats
+
+
+base-class: creature
+   stats:
+        hunger, 
+        energy, 
+        fitness,
+        attention,
+        happiness, - compound overall effect
+
+    doFeed()
+    doSleep()
+    doExercise()
+    doPet()
+    doPlayWith()
+    evtRandomAction()
+
+    statDrain('stat_name', value, over-ticks-time) - will drain a stat according to certain condition: hunger, energy, fitness, attention
+    statReplenish('stat-name', value, over-ticks-time)
+
+    playEffect() - message, animation, whatever is needed
+
+
+sub-class: 
+     mammals: cat, dog, bunny, 
+     avians: parrot, sparrow,
+     aquatic: shark, octopus, 
+     special: pet-rock:Rocky, 
+     cyber: ai-code, robot,
+
