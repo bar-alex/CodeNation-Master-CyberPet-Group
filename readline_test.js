@@ -15,14 +15,6 @@ function getInput(question) {
         });
       });
 
-
-    // rl.question(question, function (x) {
-    //   var aString = parseInt(x);
-    //   rl.close();
-    //   entered = true;
-    //   return aString;
-    // });
-  
   }
   
   async function main() {
@@ -35,6 +27,6 @@ function getInput(question) {
       console.log('a',i);
     }
   }
-  
+
   main();
 

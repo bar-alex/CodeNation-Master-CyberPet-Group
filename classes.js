@@ -1,27 +1,16 @@
-// the game will have a loop that will execute every amount of time,
-// the 'tick' is every pass of the loop - its a unit of time for the game
-// 
-// every few ticks the creature gets a bit more tired, a bit more hungry, etc
-// in the game, that is reflected as a drain in the stats
-//
-// of course, the stats don't drain at the same speed, you need to eat 3 times a day, but need to sleep only once
-// in the gameRecord object i have the number of ticks until teh respective stat drops 1 point
-// 
-// in the creature class, there is a record of how many ticks passed since last drop of the stat
-// when it reaches the amount of ticks specified in gameRecord, then it will drop the stat
+
+// the game variables
+// const { gameRecord } = require('./main');
 
 
-
-// ----------------------------------------------------------
-
-// this holds information for the game, the milliseconds for a tick and how many ticks until it drops each stat
 const gameRecord = {
-    realtimeTick: 500,     // how much realtime is for a tick -- affects the 'speed' of the game
+    realtimeTick:  500,     // how much realtime is for a tick -- affects the 'speed' of the game
     ticksEnergy:    10,     // in how many ticks does the energy drop 1 point
     ticksHunger:     3,     // in how many ticks does the hunger drop 1 point
     ticksFitness:   30,     // fitness is affected less
     ticksAttention:  5,     // in how many ticks does it crave attention
 };
+
 
 
 // the base class
@@ -67,41 +56,48 @@ class Creature{
 
     // have the creature go to sleep - energy replenishes (by default - with 1 point)
     doSleep(amount = 1){
-        this.statReplenish('energy',amount);
+        this.statGain('energy',amount);
     }
     doFeed(amount = 1){
-        this.statReplenish('hunger',amount);
+        this.statGain('hunger',amount);
     }
     doExercise(amount = 1){
-        this.statReplenish('fitness',amount);
+        this.statGain('fitness',amount);
     }
     doPet(amount = 1){
-        this.statReplenish('attention',amount);
+        this.statGain('attention',amount);
     }
     doPlayWith(){
         // 2do: could use function that gets the creature object as a param and 
         // the function will affect the stats with statDrain(), starReplenish() 
         // then use playEffect() to show a message
     }
-    // at random times, the creature might do something - add some spice, the game loop might get the creature to do something random
-    // evtRandomAction(){
-    //     // todo: can do a crazy weird random action, will be called by the loop system, will display a message with playEffect() and maybe affect some stats
-    // }
-    // message, animation, whatever is needed
-    playEffect(message){
-        console.log(`> ${message}`);
+
+    // at random times, the creature might do something cute, like a random action or effect 
+    // will be run from this.evtSystemTick() on a random basis
+    doRandomAction(){
+        this.playEffect('message',`(*) Suddenly, ${this.name} starts break-dancing!`);
+    }
+    // message, animation, whatever feedback is needed to show
+    // type specifies the type of the change, message is the message received
+    playEffect(type,param){
+        if(type=='message' || type=='stats')
+            console.log(`> ${param}`);
     }
 
     // will drain a stat - executed in accordance to certain condition: hunger, energy, fitness, attention
     statDrain(statName, value=1){
         const propName = '_'+statName;
         this[propName] = Math.max( 0, this[propName] - value);       // is an object, so using "this['_energy']" == "this._energy"
+        this.playEffect(statName,'drain');
     }
     // will replenish a stat 
-    statReplenish(statName, value=1){
+    statGain(statName, value=1){
         const propName = '_'+statName;
         this[propName] = Math.min( 100, this[propName] + value);    // can't go over 100, or below 0
+        this.playEffect(statName,'gain');
     }
+
     // every system tick this is called -- will drain the stats ikn accordance with "this._ticks_stat" and "gameRecord.ticksStat"
     evtSystemTick(){
         let changeWasMade = false;
@@ -139,25 +135,80 @@ class Creature{
                 ` | Fitness: ${this.fitness.toString().padStart(3)}`+
                 ` | Attention: ${this.attention.toString().padStart(3)}`+
                 ` | overall happiness ${this.happiness.toString().padStart(3)}`;
-            this.playEffect(text);
+            this.playEffect('stats',text);
         }
+        // randomly, execute the doRandomAction 
+        const randNumber = Math.ceil(Math.random()*25);
+        if( randNumber==23 )
+            this.doRandomAction();
+    }
+    // do something when stats change, show them, update visuals, etc
+}
+
+
+// subclass ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class Dog extends Creature{
+    constructor(name){
+        super(name);
+
+        // fot the spamming of fetch functionality
+        this._fetch_before_spam = 10;   // if oyu play fetch with him within 3 ticks then you're spamming him
+        this._ticks_since_fetch = this._fetch_before_spam+1 ;   // how many ticks since last fetch
+        this._every_x_ticks = 0;       // counts until 5 ticks
+    }
+    playFetch(){
+        if( this._ticks_since_fetch > this._fetch_before_spam){
+            // happy to play fetch, as its been a while
+            this.playEffect('message', `(^) ${this.name} is happy because you decided to play fetch with him.`);
+            //this.playEffect('refresh-stat', "energy")
+            this.statGain('fitness',3);         // gets execise, get fit
+            this.statDrain('energy',2);         // gets tired of all the running
+            this.statGain('attention',5);        // gets lots of attention
+        } else {
+            // nat so happy to play fetch you've done it pretty recently -- you're fetch-spamming him
+            this.playEffect('message', `(^) ${this.name} is happy to play fetch, but he's a bit tired`);
+            //this.playEffect('refresh-stat', "energy")
+            this.statGain('fitness',2);         // gets execise, get fit
+            this.statDrain('energy',5);         // gets tired of all the running
+            this.statGain('attention',2);        // gets lots of attention
+        }
+        // reset this
+        this._ticks_since_fetch = 0;
+        // show the stats
+        this.doShowStats();
+    }
+    evtSystemTick(){
+        this._ticks_since_fetch++;
+        super.evtSystemTick();
+
+        // every 5 ticks. run this method ~~ for testing
+        this._every_x_ticks++;      // increatses the test ticks
+        if( this._every_x_ticks >= 10 ){
+            this._every_x_ticks = 0;
+            // here you run your methid
+            this.playFetch();
+        }
+
+    }
+    // just a method to show the stats to the screen
+    doShowStats(){
+        const text = `${this._name}'s stats: `+
+            `Energy: ${this.energy.toString().padStart(3)} `+
+            ` | Hunger: ${this.hunger.toString().padStart(3)}`+
+            ` | Fitness: ${this.fitness.toString().padStart(3)}`+
+            ` | Attention: ${this.attention.toString().padStart(3)}`+
+            ` | overall happiness ${this.happiness.toString().padStart(3)}`;
+        this.playEffect('stats',text);
     }
 }
 
 
 
-// -------------------------------------------------
-// game loop example
 
-const doggy = new Creature("Mike");
+module.exports = {
+    gameRecord, 
+    Creature,
+    Dog,
+};
 
-let tick = 0;
-const intervalId = setInterval(() => {
-    tick++ ;
-    console.log('tick: '+tick);
-    // 
-    doggy.evtSystemTick()
-
-    // 
-    if(tick>=300) clearInterval(intervalId);
-}, gameRecord.realtimeTick);
