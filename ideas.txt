@@ -6,7 +6,7 @@ game settings
     ticks-attention
     ticks-happiness ?? or value should be compounded
 
-games hat you play with your pet affects stats
+games that you play with your pet affects stats
     fetch:      ++attention +fitness -hunger -energy
     juggle:     ++attention
     simon-says: ++attention -energy
@@ -35,8 +35,8 @@ base-class: creature
     doPlayWith()
     evtRandomAction()
 
-    statDrain('stat_name', value, over-ticks-time) - will drain a stat according to certain condition: hunger, energy, fitness, attention
-    statReplenish('stat-name', value, over-ticks-time)
+    statDrain('stat_name', value, over-time-ticks) - will drain a stat according to certain condition: hunger, energy, fitness, attention
+    statReplenish('stat-name', value, over-time-ticks)
 
     playEffect() - message, animation, whatever is needed
 
